@@ -73,6 +73,13 @@ async function run() {
             res.send(part);
         });
 
+        app.get('/booking/:email', verifyJWT, async (req, res) => {
+            const email = req.query.email;
+            const query = { userEmail: email }
+            const booking = await bookingCollection.find(query).toArray();
+            res.send(booking);
+        });
+
         app.post('/booking', verifyJWT, async (req, res) => {
             const data = req.body;
             const result = await bookingCollection.insertOne(data);
