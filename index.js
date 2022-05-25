@@ -49,6 +49,22 @@ async function run() {
             res.send(parts);
         });
 
+        app.put('/parts/:id', verifyJWT, async (req, res) => {
+            const data = req.body;
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true };
+
+            const updateDoc = {
+                $set: {
+                    availableQuantity: data.availableQuantity,
+                    minimumQuantity: data.minimumQuantity
+                }
+            };
+            const result = await partsCollection.updateOne(filter, updateDoc, options);
+            res.send(result);
+        })
+
         app.get('/parts/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
@@ -56,6 +72,11 @@ async function run() {
             res.send(part);
         });
 
+        app.post('/booking', verifyJWT, async (req, res) => {
+            const data = req.body;
+            const result = await bookingCollection.insertOne(data);
+            res.send(result);
+        });
 
     }
     finally { }
