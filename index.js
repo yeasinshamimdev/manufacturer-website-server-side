@@ -200,15 +200,15 @@ async function run() {
         })
 
         app.post('/addProduct', verifyJWT, verifyAdmin, async (req, res) => {
-            const user = req.body;
-            const result = await userCollection.insertOne(user);
+            const { data } = req.body;
+            const result = await partsCollection.insertOne(data);
             res.send(result);
         });
 
-        app.delete('/user/:email', verifyJWT, verifyAdmin, async (req, res) => {
-            const email = req.params.email;
-            const filter = { userEmail: email };
-            const result = await userCollection.deleteOne(filter);
+        app.delete('/parts/:id', verifyJWT, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const result = await partsCollection.deleteOne(filter);
             res.send(result);
         })
 
