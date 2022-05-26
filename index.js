@@ -36,6 +36,8 @@ async function run() {
         const partsCollection = client.db("car-parts").collection("parts");
         const bookingCollection = client.db("car-parts").collection("booking");
         const paymentCollection = client.db("car-parts").collection("payment");
+        const reviewCollection = client.db("car-parts").collection("review");
+        const userCollection = client.db("car-parts").collection("users");
 
         // jwt token 
         app.post('/login', async (req, res) => {
@@ -51,6 +53,11 @@ async function run() {
             const parts = await partsCollection.find({}).toArray();
             res.send(parts);
         });
+
+        app.get('/payment', verifyJWT, async (req, res) => {
+            const payment = await paymentCollection.find({}).toArray();
+            res.send(payment);
+        })
 
         app.put('/parts/:id', verifyJWT, async (req, res) => {
             const data = req.body;
@@ -80,6 +87,36 @@ async function run() {
             const query = { userEmail: email }
             const booking = await bookingCollection.find(query).toArray();
             res.send(booking);
+        });
+
+        app.get('/review', async (req, res) => {
+            const review = await reviewCollection.find({}).toArray();
+            res.send(review);
+        });
+
+        app.put('/users/:email', verifyJWT, async (req, res) => {
+            const email = req.query.email;
+            const { formData } = req.body;
+            const filter = { userEmail: email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    userName: formData.userName,
+                    userEmail: formData.userEmail,
+                    education: formData.education,
+                    location: formData.location,
+                    phone: formData.phone,
+                    linkedin: formData.linkedin,
+                }
+            };
+            const result = await userCollection.updateOne(filter, updateDoc, options);
+            res.send(result);
+        })
+
+        app.post('/review', verifyJWT, async (req, res) => {
+            const { data } = req.body;
+            const result = await reviewCollection.insertOne(data);
+            res.send(result);
         });
 
         app.post('/booking', verifyJWT, async (req, res) => {
