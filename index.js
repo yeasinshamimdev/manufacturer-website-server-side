@@ -39,6 +39,17 @@ async function run() {
         const reviewCollection = client.db("car-parts").collection("review");
         const userCollection = client.db("car-parts").collection("users");
 
+        const verifyAdmin = async (req, res, next) => {
+            const requester = req.decoded.email;
+            const requesterAccount = await userCollection.findOne({ userEmail: requester });
+            if (requesterAccount.role === 'admin') {
+                next();
+            }
+            else {
+                res.status(403).send({ message: 'forbidden' });
+            }
+        }
+
         // jwt token 
         app.post('/login', async (req, res) => {
             const email = req.body;
@@ -75,6 +86,25 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = await userCollection.findOne({ userEmail: email });
+            if (user) {
+                const isAdmin = user.role === 'admin';
+                res.send({ admin: isAdmin })
+            }
+        })
+
+        app.put('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
+            const email = req.params.email;
+            const filter = { userEmail: email };
+            const updateDoc = {
+                $set: { role: 'admin' },
+            };
+            const result = await userCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        })
+
         app.get('/parts/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
@@ -93,6 +123,11 @@ async function run() {
             const review = await reviewCollection.find({}).toArray();
             res.send(review);
         });
+
+        app.get('/users', verifyJWT, async (req, res) => {
+            const users = await userCollection.find({}).toArray();
+            res.send(users);
+        })
 
         app.put('/users/:email', verifyJWT, async (req, res) => {
             const email = req.query.email;
@@ -156,6 +191,24 @@ async function run() {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
             const result = await bookingCollection.deleteOne(query);
+            res.send(result);
+        });
+
+        app.get('/user', verifyJWT, verifyAdmin, async (req, res) => {
+            const users = await userCollection.find({}).toArray();
+            res.send(users);
+        })
+
+        app.post('/addProduct', verifyJWT, verifyAdmin, async (req, res) => {
+            const user = req.body;
+            const result = await userCollection.insertOne(user);
+            res.send(result);
+        });
+
+        app.delete('/user/:email', verifyJWT, verifyAdmin, async (req, res) => {
+            const email = req.params.email;
+            const filter = { userEmail: email };
+            const result = await userCollection.deleteOne(filter);
             res.send(result);
         })
 
