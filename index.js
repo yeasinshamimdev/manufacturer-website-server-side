@@ -112,6 +112,11 @@ async function run() {
             res.send(part);
         });
 
+        app.get('/bookings', verifyJWT, verifyAdmin, async (req, res) => {
+            const bookings = await bookingCollection.find({}).toArray();
+            res.send(bookings);
+        })
+
         app.get('/booking/:email', verifyJWT, async (req, res) => {
             const email = req.query.email;
             const query = { userEmail: email }
@@ -170,6 +175,19 @@ async function run() {
             });
             res.send({ clientSecret: paymentIntent.client_secret })
         });
+
+        app.put('/user/booking/:id', verifyJWT, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const { paymentStatus } = req.body;
+            const filter = { _id: ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    paymentStatus: paymentStatus
+                }
+            };
+            const result = await bookingCollection.updateOne(filter, updatedDoc);
+            res.send(result);
+        })
 
         app.patch('/booking/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
