@@ -194,6 +194,12 @@ async function run() {
             res.send(result);
         });
 
+        app.post('/user', async (req, res) => {
+            const data = req.body;
+            const result = await userCollection.insertOne(data);
+            res.send(result);
+        })
+
         app.get('/user', verifyJWT, verifyAdmin, async (req, res) => {
             const users = await userCollection.find({}).toArray();
             res.send(users);
